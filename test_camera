@@ -1,0 +1,62 @@
+import cv2
+import time
+from deepface import DeepFace
+
+#camera
+cap = cv2.VideoCapture(0)
+
+#camera not work
+if not cap.isOpened():
+    print("Error: Could not open Camera")
+    exit()
+
+#limit frames = 60
+target_fps = 60
+frame_delay = 1 / target_fps
+prev_frame_time = time.time()
+
+
+
+while True:
+
+    current_time = time.time()
+    elapsed = current_time - prev_frame_time
+
+    if elapsed >= frame_delay:
+        ret, frame = cap.read()
+        frame = cv2.flip(frame, 1)
+
+        if not ret:
+            print("Error: Failed to capture frame.")
+            break
+
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        try:
+            face_analysis = DeepFace.analyze(img_path=rgb_frame,
+                                            detector_backend='opencv',
+                                            enforce_detection=False)
+            for face_info in face_analysis:
+                face_rectangle = face_info['region']
+                x = face_rectangle['x']
+                y = face_rectangle['y']
+                w = face_rectangle['w']
+                h = face_rectangle['h']
+
+                cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 0, 255), 2)
+
+        except Exception as e:
+            print(f"Error in face detection: {e}")
+
+        cv2.imshow('Face Detection', frame)
+
+        prev_frame_time = current_time
+ 
+    #press q to exit
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+
+
+cap.release()
+cv2.destroyAllWindows()
