@@ -11,7 +11,7 @@ is_frame_ready = False
 is_processing_done = True
 
 async def capture_frames(cap, target_fps=60):
-    """Capture frames from the camera at the specified FPS"""
+
     global frame_to_process, is_frame_ready, is_processing_done
     
     frame_delay = 1 / target_fps
@@ -34,8 +34,8 @@ async def capture_frames(cap, target_fps=60):
                 is_processing_done = False
                 prev_frame_time = current_time
         
-        # Small sleep to prevent CPU overuse
-        await asyncio.sleep(0.001)
+        # Small sleep
+        await asyncio.sleep(0.01)
 
 def detect_faces(frame):
     """Detect faces in a frame and draw red rectangles around them only if faces are detected"""
@@ -66,7 +66,6 @@ def detect_faces(frame):
     return result_frame, face_detected
 
 async def process_frames(executor):
-    """Process frames with face detection using a thread pool"""
     global frame_to_process, processed_frame, is_frame_ready, is_processing_done
     
     while True:
@@ -79,11 +78,10 @@ async def process_frames(executor):
             is_frame_ready = False
             is_processing_done = True
         
-        # Small sleep to prevent CPU overuse
-        await asyncio.sleep(0.001)
+        # Small sleep
+        await asyncio.sleep(0.01)
 
 async def display_frames(window_name="Face Detection"):
-    """Display processed frames"""
     global processed_frame, is_processing_done
     
     while True:
@@ -95,8 +93,8 @@ async def display_frames(window_name="Face Detection"):
                 print("Exiting application...")
                 return
         
-        # Small sleep to prevent CPU overuse
-        await asyncio.sleep(0.001)
+        # Small sleep
+        await asyncio.sleep(0.01)
 
 async def main():
     # Initialize the camera
