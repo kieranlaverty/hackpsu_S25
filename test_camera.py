@@ -35,8 +35,8 @@ async def capture_frames(cap, target_fps=60):
             
             if last_area_time + 60 < current_time:
                 last_area_time = current_time
-                cv2.imwrite(f'area/output_image_{area_id}.png', frame)
-                print(f"Saved area image as output_image_{area_id}.png")
+                cv2.imwrite(f'area/output_image_{area_id}.jpg', frame)
+                print(f"Saved area image as output_image_{area_id}.jpg")
                 area_id += 1
 
             # Wait until the previous frame has been processed
@@ -91,12 +91,12 @@ def detect_faces(frame):
                         print(f"Saved cropped face image as output_image_{face_id}.jpg")
                         face_id += 1
                     else:
-                        if last + 60 < time.time():
+                        if last + 3 < time.time():
                             last = time.time()
                             crop_face = frame[top:bottom, left:right]
                             resized_crop_face = cv2.resize(crop_face, (128, 128))
-                            cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/output_image_{face_id}.png', resized_crop_face)
-                            print(f"Saved cropped face image as output_image_{face_id}.png")
+                            cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/output_image_{face_id}.jpg', resized_crop_face)
+                            print(f"Saved cropped face image as output_image_{face_id}.jpg")
                             face_id += 1
                 except Exception as e:
                     print(f"Error saving cropped face image: {e}")
@@ -130,7 +130,7 @@ async def display_frames(window_name="Face Detection"):
     
     while True:
         if processed_frame is not None:
-            #cv2.imshow(window_name, processed_frame)
+            cv2.imshow(window_name, processed_frame)
             
             # Break the loop if 'q' is pressed
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -166,6 +166,5 @@ async def main():
     cap.release()
     cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    # Run the asyncio event loop
-    asyncio.run(main())  
+
+asyncio.run(main())  
