@@ -4,10 +4,10 @@ from tkinter import messagebox
 from PIL import Image, ImageTk
 import os
 
-class JPEGSelectorApp:
+class ImageSelectorApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("JPEG Image Selector")
+        self.root.title("Image Selector")
         self.root.geometry("600x400")
         self.root.configure(bg="#f0f0f0")
         
@@ -20,7 +20,7 @@ class JPEGSelectorApp:
         # Create title label
         self.title_label = tk.Label(
             self.main_frame, 
-            text="JPEG Image Selector", 
+            text="Image Selector", 
             font=("Arial", 18, "bold"),
             bg="#f0f0f0"
         )
@@ -33,7 +33,7 @@ class JPEGSelectorApp:
         # Create browse button
         self.browse_button = tk.Button(
             self.button_frame,
-            text="Browse for JPEG Image",
+            text="Browse for Image",
             command=self.browse_image,
             font=("Arial", 12),
             bg="#4285f4",
@@ -50,7 +50,7 @@ class JPEGSelectorApp:
         # Create path label
         self.path_label = tk.Label(
             self.path_frame,
-            text="Selected JPEG Path:",
+            text="Selected Image Path:",
             font=("Arial", 12),
             bg="#f0f0f0"
         )
@@ -115,33 +115,22 @@ class JPEGSelectorApp:
         self.cancel_button.pack(side=tk.LEFT, padx=5)
     
     def browse_image(self):
-        # Open file dialog for JPEG files only
+        # Open file dialog
         filetypes = [
-            ("JPEG files", "*.jpg;*.jpeg"),
+            ("Image files", "*.png;*.jpg;*.jpeg;*.gif;*.bmp"),
+            ("All files", "*.*")
         ]
         
         selected_path = filedialog.askopenfilename(
-            title="Select a JPEG Image",
+            title="Select an Image",
             filetypes=filetypes
         )
         
         if selected_path:
-            # Verify it's actually a JPEG file
-            if self.verify_jpeg(selected_path):
-                self.image_path = selected_path
-                self.path_var.set(selected_path)
-                self.load_preview()
-                self.use_button.config(state=tk.NORMAL)
-            else:
-                messagebox.showerror("Error", "Selected file is not a valid JPEG image.")
-    
-    def verify_jpeg(self, file_path):
-        """Verify the file is actually a JPEG image"""
-        try:
-            with Image.open(file_path) as img:
-                return img.format in ('JPEG', 'JPG')
-        except Exception:
-            return False
+            self.image_path = selected_path
+            self.path_var.set(selected_path)
+            self.load_preview()
+            self.use_button.config(state=tk.NORMAL)
         
     def load_preview(self):
         try:
@@ -173,10 +162,10 @@ class JPEGSelectorApp:
     
     def use_image(self):
         # Here you would add code to process the selected image
-        messagebox.showinfo("Success", f"Selected JPEG image: {self.image_path}")
+        messagebox.showinfo("Success", f"Selected image: {self.image_path}")
         # You could access self.image_path in your application logic
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = JPEGSelectorApp(root)
+    app = ImageSelectorApp(root)
     root.mainloop()
