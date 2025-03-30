@@ -10,7 +10,7 @@ class FaceDetector(object):
     
     def _draw(self, frame, boxes, probs, landmarks):
         try:
-            for box, prob, ld in zip(boxes, probls, landmarks):
+            for box, prob, ld in zip(boxes, probs, landmarks):
                 cv2.rectangle(frame, 
                             (box[0], box[1]), 
                             (box[2], box[3]), 
@@ -37,15 +37,14 @@ def run(self):
         try:
             box, probs, landmarks = self.mtcnn.detect(frame, landmarks=True)
 
-            self._draw(frame, boxes, probs, landmarks)
+            self._draw(frame, box, probs, landmarks)
 
         except:
             pass
 
-        
         cv2.imshow('Face Detection', frame)
 
-        if vc2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q'):
             break
         
     cap.release()

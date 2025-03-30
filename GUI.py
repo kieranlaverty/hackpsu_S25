@@ -683,13 +683,12 @@ class ImageSelectorApp:
                 image_tensor = F.to_tensor(image)
                 img = genFace.predict(image_tensor, self.AiPath)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                
+                result_img = Image.fromarray(img)
+                self.ai_result_image = result_img
 
-                
-                img = Image.open("D:/hackpsuS25/hackpsu_S25/face/reconstuted.png")
-                
-                
-                
+                self.display_ai_result()
+                self.save_result_button.config(state=tk.NORMAL)
+
                 messagebox.showinfo("Success", "Image sent for AI processing")
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to process image: {str(e)}")
