@@ -4,6 +4,7 @@ from tkinter import messagebox
 from PIL import Image, ImageTk, ImageDraw
 import os
 import random
+import genFace
 
 class ImageSelectorApp:
     def __init__(self, root):
