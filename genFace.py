@@ -152,10 +152,10 @@ def predict(masked_image, image_path):
     mask = create_color_mask( image_path, target_color)
     torch.unique(mask)
 """
-    masked_image = masked_image.to("cpu")
 
     with torch.no_grad():
-            generated_imgs = model(masked_image)
+            generated_imgs = model(masked_image).to('cpu')
+
     def denorm(img):
         return (img * 0.5) + 0.5
     idx = 0
@@ -164,7 +164,9 @@ def predict(masked_image, image_path):
     
     i = cv2.cvtColor(result.numpy(), cv2.COLOR_BGR2RGB)
     i = cv2.resize(i, (500, 500))
-    cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/reconstuted.png', i)
+    
+
+    cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/reconstuted.jpg', i)
     cv2.imshow('Image', i)
 
     cv2.waitKey(0)

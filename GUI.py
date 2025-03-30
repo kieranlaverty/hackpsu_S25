@@ -679,10 +679,13 @@ class ImageSelectorApp:
             try:
                 # Call the AI processing function from genFace
                 
-                image = Image.open(self.AiPath).convert("RGB")
+                image = Image.open(self.AiPath)
+                #image = cv2.imread(self.AiPath)
                 image_tensor = F.to_tensor(image)
+                image_tensor = image_tensor[:3, :, :]
+
                 img = genFace.predict(image_tensor, self.AiPath)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                
                 
 
                 
