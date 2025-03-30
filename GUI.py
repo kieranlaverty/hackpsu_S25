@@ -1,13 +1,81 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
-from PIL import Image, ImageTk, ImageDraw
+from PIL import Image, ImageTk, ImageDraw, ImageGrab
 import os
 import random
 import genFace
+import cv2
+import numpy as np
+import pytensor.tensor as pt
+from torch import nn
+import torch
+import torchvision.transforms.functional as F
+
+
+class UNet(nn.Module):
+    def __init__(self, in_channels=3, out_channels=3):
+        super(UNet, self).__init__()
+
+        # Encoder (Downsampling)
+        self.encoder = nn.Sequential(
+            self.conv_block(in_channels, 64),
+            self.conv_block(64, 128),
+            self.conv_block(128, 256),
+            self.conv_block(256, 512),
+            self.conv_block(512, 1024)
+        )
+
+        # Decoder (Upsampling)
+        self.decoder = nn.Sequential(
+            self.upconv_block(1024, 512),
+            self.upconv_block(512, 256),
+            self.upconv_block(256, 128),
+            self.upconv_block(128, 64),
+            nn.ConvTranspose2d(64, out_channels, kernel_size=2, stride=2)
+        )
+
+    def conv_block(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.LeakyReLU(inplace=True),
+            nn.MaxPool2d(2)
+        )
+
+    def upconv_block(self, in_channels, out_channels):
+        return nn.Sequential(
+            nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.LeakyReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.LeakyReLU(inplace=True)
+        )
+
+    def forward(self, x):
+        # Encoder
+        enc1 = self.encoder[0](x)
+        enc2 = self.encoder[1](enc1)
+        enc3 = self.encoder[2](enc2)
+        enc4 = self.encoder[3](enc3)
+        enc5 = self.encoder[4](enc4)
+
+        # Decoder
+        dec1 = self.decoder[0](enc5)
+        dec2 = self.decoder[1](dec1 + enc4)
+        dec3 = self.decoder[2](dec2 + enc3)
+        dec4 = self.decoder[3](dec3 + enc2)
+        out = self.decoder[4](dec4 + enc1)
+
+        return out
+
+
 
 class ImageSelectorApp:
     def __init__(self, root):
+        self.AiPath = None
         self.root = root
         self.root.title("Image Selector with Black Drawing and Boxes")
         self.root.geometry("800x700")
@@ -585,6 +653,7 @@ class ImageSelectorApp:
                 # Convert original image to RGBA
                 orig_rgba = self.original_image.convert("RGBA")
                 
+                
                 # Scale up drawing to match original image size
                 scaled_drawing = self.drawing_image.resize(
                     (orig_width, orig_height), 
@@ -596,19 +665,29 @@ class ImageSelectorApp:
                 
                 # Save the image
                 final_full_size.save(save_path)
+                self.AiPath = save_path
                 messagebox.showinfo("Success", f"Modified image saved to: {save_path}")
+
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to save image: {str(e)}")
     
     def use_image(self):
-        if self.final_image:
-            # Here you would add code to process the image with modifications
-            messagebox.showinfo("Success", f"Using modified image from: {self.image_path}")
+        if self.AiPath == None:
+            messagebox.showerror("Error", "No image selected for AI processing")
+            return
         else:
-            # Here you would add code to process the selected image
-            messagebox.showinfo("Success", f"Using original image: {self.image_path}")
-            
-        # You could access self.image_path, self.original_image, and self.final_image in your application logic
+            try:
+                # Call the AI processing function from genFace
+                
+                image = Image.open(self.AiPath).convert("RGB")
+                image_tensor = F.to_tensor(image)
+                img = genFace.predict(image_tensor, self.AiPath)
+                cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/reconstuted.jpg', img.numpy())
+                
+                
+                messagebox.showinfo("Success", "Image sent for AI processing")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to process image: {str(e)}")
 
 if __name__ == "__main__":
     root = tk.Tk()

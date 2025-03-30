@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 import torchvision.transforms.functional as F
 #import random
-#from PIL import Image
-
-#import cv2
-#import numpy as np
+from PIL import Image
+import cv2
+import numpy as np
 import pytensor.tensor as pt
 from pytensor import function
 
@@ -70,12 +69,89 @@ class UNet(nn.Module):
         return out
 
 
-def predict(masked_image):
+def create_color_mask(image_path, target_color):
+
+    image = Image.open(image_path)
+    image_tensor = torch.tensor(np.array(image)).permute(2, 0, 1).float() / 255.0
+    target_color_tensor = torch.tensor(target_color).float().reshape(3, 1, 1) / 255.0
+    mask = (image_tensor == target_color_tensor).all(dim=0)
+    mask = mask.int()
+    return mask
+
+
+def predict(masked_image, image_path):
+    
+
+    class UNet(nn.Module):
+        def __init__(self, in_channels=3, out_channels=3):
+            super(UNet, self).__init__()
+
+            # Encoder (Downsampling)
+            self.encoder = nn.Sequential(
+                self.conv_block(in_channels, 64),
+                self.conv_block(64, 128),
+                self.conv_block(128, 256),
+                self.conv_block(256, 512),
+                self.conv_block(512, 1024)
+            )
+
+            # Decoder (Upsampling)
+            self.decoder = nn.Sequential(
+                self.upconv_block(1024, 512),
+                self.upconv_block(512, 256),
+                self.upconv_block(256, 128),
+                self.upconv_block(128, 64),
+                nn.ConvTranspose2d(64, out_channels, kernel_size=2, stride=2)
+            )
+
+        def conv_block(self, in_channels, out_channels):
+            return nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+                nn.LeakyReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+                nn.LeakyReLU(inplace=True),
+                nn.MaxPool2d(2)
+            )
+
+        def upconv_block(self, in_channels, out_channels):
+            return nn.Sequential(
+                nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2),
+                nn.LeakyReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+                nn.LeakyReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+                nn.LeakyReLU(inplace=True)
+            )
+
+        def forward(self, x):
+            # Encoder
+            enc1 = self.encoder[0](x)
+            enc2 = self.encoder[1](enc1)
+            enc3 = self.encoder[2](enc2)
+            enc4 = self.encoder[3](enc3)
+            enc5 = self.encoder[4](enc4)
+
+            # Decoder
+            dec1 = self.decoder[0](enc5)
+            dec2 = self.decoder[1](dec1 + enc4)
+            dec3 = self.decoder[2](dec2 + enc3)
+            dec4 = self.decoder[3](dec3 + enc2)
+            out = self.decoder[4](dec4 + enc1)
+
+            return out
+
+
     path = "D:/hackpsuS25/hackpsu_S25/unet.pth"
     model = torch.load(path, map_location=torch.device('cpu'))
     model.eval() 
 
+    
     masked_image = masked_image.unsqueeze(0)  # Add batch dimension
+
+    target_color = [0, 0, 0]  # Red
+    mask = create_color_mask( image_path, target_color)
+    torch.unique(mask)
+
     masked_image = masked_image.to("cpu")
 
     with torch.no_grad():
@@ -83,7 +159,16 @@ def predict(masked_image):
     def denorm(img):
         return (img * 0.5) + 0.5
     idx = 0
-    return denorm(generated_imgs[idx].cpu().permute(1, 2, 0))
+
+    result = denorm(generated_imgs[idx].cpu().permute(1, 2, 0))
+
+    i = cv2.cvtColor(result.numpy(), cv2.COLOR_BGR2RGB)
+
+    cv2.imshow('Image', i)
+
+    cv2.waitKey(0)
+
+    return result
 
 """"
 def add_random_mask(image_path, mask_ratio=0.5, mask_color=(0, 0, 0)):
