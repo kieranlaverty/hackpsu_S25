@@ -33,9 +33,9 @@ async def capture_frames(cap, target_fps=60):
                 print("Error: Failed to capture frame.")
                 break
             
-            if last_area_time + 60 < current_time:
+            if last_area_time + 5 < current_time:
                 last_area_time = current_time
-                cv2.imwrite(f'area/output_image_{area_id}.jpg', frame)
+                cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/area/output_image_{area_id}.jpg', frame)
                 print(f"Saved area image as output_image_{area_id}.jpg")
                 area_id += 1
 

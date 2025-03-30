@@ -69,11 +69,12 @@ class UNet(nn.Module):
 
         return out
 
-path = "D:/hackpsuS25/hackpsu_S25/unet.pth"
-model = torch.load(path, map_location=torch.device('cpu'))
-model.eval() 
 
 def predict(masked_image):
+    path = "D:/hackpsuS25/hackpsu_S25/unet.pth"
+    model = torch.load(path, map_location=torch.device('cpu'))
+    model.eval() 
+
     masked_image = masked_image.unsqueeze(0)  # Add batch dimension
     masked_image = masked_image.to("cpu")
 
