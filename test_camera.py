@@ -3,16 +3,22 @@ import asyncio
 import time
 from deepface import DeepFace
 from concurrent.futures import ThreadPoolExecutor
+import time
 
 # Global variables for sharing data between async functions
 frame_to_process = None
 processed_frame = None
 is_frame_ready = False
 is_processing_done = True
+face_id = 0
+first = True
+last = 0
+last_area_time = 0
+area_id = 0
 
 async def capture_frames(cap, target_fps=60):
 
-    global frame_to_process, is_frame_ready, is_processing_done
+    global frame_to_process, is_frame_ready, is_processing_done, last_area_time, area_id
     
     frame_delay = 1 / target_fps
     prev_frame_time = time.time()
@@ -27,6 +33,12 @@ async def capture_frames(cap, target_fps=60):
                 print("Error: Failed to capture frame.")
                 break
             
+            if last_area_time + 60 < current_time:
+                last_area_time = current_time
+                cv2.imwrite(f'area/output_image_{area_id}.jpg', frame)
+                print(f"Saved area image as output_image_{area_id}.jpg")
+                area_id += 1
+
             # Wait until the previous frame has been processed
             if is_processing_done:
                 frame_to_process = frame.copy()
@@ -39,28 +51,60 @@ async def capture_frames(cap, target_fps=60):
 
 def detect_faces(frame):
     """Detect faces in a frame and draw red rectangles around them only if faces are detected"""
+    global face_id, first, last
     result_frame = frame.copy()
     face_detected = False
     
     try:
         faces = DeepFace.extract_faces(img_path=frame, 
                                       detector_backend='opencv',
-                                      enforce_detection=False)
+                                      enforce_detection=True)
         
         # Only draw rectangles if faces were actually detected
         if faces and len(faces) > 0:
             face_detected = True
             for face in faces:
                 facial_area = face['facial_area']
+                #print(f"Detected face at: {facial_area}")
                 x = facial_area['x']
                 y = facial_area['y']
                 w = facial_area['w']
                 h = facial_area['h']
                 
-                cv2.rectangle(result_frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                left = x - 10
+                top = y - 70
+                right = x + w + 5
+                bottom = y + h + 20
+
+                cv2.rectangle(result_frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                
+                try:
+
+                    if first == True:
+                        face_id = 0
+                        first = False
+                        last = time.time()
+                        crop_face = frame[top:bottom, left:right]
+                        resized_crop_face = cv2.resize(crop_face, (128, 128))
+                        cv2.imwrite(f'face/output_image_{face_id}.jpg', resized_crop_face)
+                        
+                        print(f"Saved cropped face image as output_image_{face_id}.jpg")
+                        face_id += 1
+                    else:
+                        if last + 3 < time.time():
+                            last = time.time()
+                            crop_face = frame[top:bottom, left:right]
+                            resized_crop_face = cv2.resize(crop_face, (128, 128))
+                            cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/output_image_{face_id}.jpg', resized_crop_face)
+                            print(f"Saved cropped face image as output_image_{face_id}.jpg")
+                            face_id += 1
+                except Exception as e:
+                    print(f"Error saving cropped face image: {e}")
+                    
+                
     
     except Exception as e:
-        print(f"Error in face detection: {e}")
+        print(f"THERE IS NO FACE: {e}")
     
     # Return the original frame if no faces were detected (no red boxes)
     return result_frame, face_detected
@@ -122,6 +166,5 @@ async def main():
     cap.release()
     cv2.destroyAllWindows()
 
-if __name__ == "__main__":
-    # Run the asyncio event loop
-    asyncio.run(main())  
+
+asyncio.run(main())  

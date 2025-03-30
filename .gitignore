@@ -1,2 +1,7 @@
+
 key/
 data/
+face/
+area/
+
+*.pth
