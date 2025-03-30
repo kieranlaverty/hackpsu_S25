@@ -148,10 +148,10 @@ def predict(masked_image, image_path):
     
     masked_image = masked_image.unsqueeze(0)  # Add batch dimension
 
-    target_color = [0, 0, 0]  # Red
+    """target_color = [0, 0, 0]  # Red
     mask = create_color_mask( image_path, target_color)
     torch.unique(mask)
-
+"""
     masked_image = masked_image.to("cpu")
 
     with torch.no_grad():
@@ -161,14 +161,15 @@ def predict(masked_image, image_path):
     idx = 0
 
     result = denorm(generated_imgs[idx].cpu().permute(1, 2, 0))
-
+    
     i = cv2.cvtColor(result.numpy(), cv2.COLOR_BGR2RGB)
-
+    i = cv2.resize(i, (500, 500))
+    cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/reconstuted.png', i)
     cv2.imshow('Image', i)
 
     cv2.waitKey(0)
 
-    return result
+    return i
 
 """"
 def add_random_mask(image_path, mask_ratio=0.5, mask_color=(0, 0, 0)):

@@ -682,9 +682,12 @@ class ImageSelectorApp:
                 image = Image.open(self.AiPath).convert("RGB")
                 image_tensor = F.to_tensor(image)
                 img = genFace.predict(image_tensor, self.AiPath)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                
 
-                img = Image.open("D:/hackpsuS25/hackpsu_S25/face/reconstuted.jpg")
-                #cv2.imwrite(f'D:/hackpsuS25/hackpsu_S25/face/reconstuted.jpg', img.numpy())
+                
+                img = Image.open("D:/hackpsuS25/hackpsu_S25/face/reconstuted.png")
+                
                 
                 
                 messagebox.showinfo("Success", "Image sent for AI processing")
